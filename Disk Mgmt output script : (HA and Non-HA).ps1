@@ -1,4 +1,4 @@
-Disk Mgmt output script : (HA and Non-HA) &  output name { MRS_DiskMgMT_Report_(HA/NonHA) }
+#Disk Mgmt output script : (HA and Non-HA) &  output name { MRS_DiskMgMT_Report_(HA/NonHA) }
 
 # Get the server name
 $serverName = $env:COMPUTERNAME
