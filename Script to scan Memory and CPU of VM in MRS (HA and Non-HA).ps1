@@ -1,4 +1,4 @@
-Script to scan Memory and CPU of VM in MRS : (HA and Non-HA) &  output name { VM_CPU&Memory_Scan_(HA/NonHA) }
+#Script to scan Memory and CPU of VM in MRS : (HA and Non-HA) &  output name { VM_CPU&Memory_Scan_(HA/NonHA) }
  
 # Get the hostname of the Hyper-V host
 $hostName = $env:COMPUTERNAME
