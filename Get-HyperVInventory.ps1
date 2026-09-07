@@ -16,6 +16,7 @@
       - Every disk visible to the host (one by one)
 
     VM line includes:
+      - Host Name (the Hyper-V server the VM is running on)
       - CPU count
       - Memory type (Dynamic or Static)
       - Assigned memory (current runtime usage)
@@ -212,12 +213,13 @@ Write-Host ""
 # SECTION 1: Hyper-V host inventory
 # ============================================================================
 
+$HostName = $env:COMPUTERNAME
+
 try
 {
     $ComputerSystem = Get-CimInstance -ClassName Win32_ComputerSystem -ErrorAction Stop
     $Processors = @(Get-CimInstance -ClassName Win32_Processor -ErrorAction Stop)
 
-    $HostName = $env:COMPUTERNAME
     $PhysicalCPUSockets = $Processors.Count
     $PhysicalCPUCores = ($Processors | Measure-Object -Property NumberOfCores -Sum).Sum
     $LogicalCPUCount = ($Processors | Measure-Object -Property NumberOfLogicalProcessors -Sum).Sum
@@ -226,6 +228,7 @@ try
     $HostOutputParts = New-Object System.Collections.Generic.List[string]
 
     $HostOutputParts.Add("Server Name : $HostName")
+    $HostOutputParts.Add("Host Name : $HostName")
     $HostOutputParts.Add("Type : Host")
     $HostOutputParts.Add("Physical CPU Sockets : $PhysicalCPUSockets")
     $HostOutputParts.Add("Physical CPU Cores : $PhysicalCPUCores")
@@ -307,13 +310,13 @@ try
 }
 catch
 {
-    Write-Error ("Unable to retrieve virtual machines from host '{0}'. Error: {1}" -f $env:COMPUTERNAME, $_.Exception.Message)
+    Write-Error ("Unable to retrieve virtual machines from host '{0}'. Error: {1}" -f $HostName, $_.Exception.Message)
     return
 }
 
 if ($VirtualMachines.Count -eq 0)
 {
-    Write-Warning ("No virtual machines were found on Hyper-V host '{0}'." -f $env:COMPUTERNAME)
+    Write-Warning ("No virtual machines were found on Hyper-V host '{0}'." -f $HostName)
 }
 else
 {
@@ -379,7 +382,24 @@ else
                 $AssignedMemory = "0 GB (VM not running)"
             }
 
+            # ------------------------------------------------------------
+            # Determine the Hyper-V host currently running this VM.
+            # $VM.ComputerName reflects the host the VM object was
+            # retrieved from (works for both standalone hosts and
+            # cluster nodes when run locally on the owning node).
+            # ------------------------------------------------------------
+
+            if (Test-StringEmpty -Value $VM.ComputerName)
+            {
+                $VMHostName = $HostName
+            }
+            else
+            {
+                $VMHostName = $VM.ComputerName
+            }
+
             $VMOutputParts.Add("Server Name : $($VM.Name)")
+            $VMOutputParts.Add("Host Name : $VMHostName")
             $VMOutputParts.Add("Type : VM")
             $VMOutputParts.Add("State : $($VM.State)")
             $VMOutputParts.Add("CPU : $VMCPUCount")
